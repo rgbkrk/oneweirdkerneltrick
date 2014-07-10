@@ -1,0 +1,4 @@
+oneweirdkerneltrick
+===================
+
+Hijacking IPython Websockets
